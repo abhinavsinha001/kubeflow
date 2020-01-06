@@ -46,6 +46,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
   python3-pip \
   python3-dev \
   python3-setuptools \
+  openjdk-8-jdk \
+  scala \
   && apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
@@ -104,11 +106,32 @@ RUN pip3 --no-cache-dir install \
     jupyter-console==6.0.0 \
     jupyterlab \
     xgboost \
+    pyspark \
     git+https://github.com/kubeflow/fairing@a9bb9d5cc1c9f1d75efa31198ddbdccfe176b7bf
 
 COPY --chown=jovyan:users requirements.txt /tmp
 
+#Spark Setup
+ENV JAVA_HOME "/usr/lib/jvm/java-8-openjdk-amd64"
+#ADD http://apachemirror.wuchna.com/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz /usr/local/
+#RUN cd /usr/local/ && ls -lrth && tar -zxf spark-2.4.4-bin-hadoop2.7.tgz
+#ENV SPARK_HOME=/usr/local/spark-2.4.4-bin-hadoop2.7
+#ENV PATH=$PATH:$SPARK_HOME/bin
+#ENV PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
+#ENV PYSPARK_DRIVER_PYTHON="jupyter"
+#ENV PYSPARK_DRIVER_PYTHON_OPTS="notebook"
+#ENV PYSPARK_PYTHON python3
+#ENV PATH $PATH:$JAVA_HOME/jre/bin
+
+#RUN wget http://apt.typesafe.com/repo-deb-build-0002.deb && dpkg -i repo-deb-build-0002.deb && apt-get update && apt-get install sbt
+
+RUN echo "deb https://dl.bintray.com/sbt/debian /" | sudo tee -a /etc/apt/sources.list.d/sbt.list
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823
+RUN apt-get update && apt-get install sbt -y
+RUN mkdir -p /home/jovyan/.sbt/boot/ && chmod -R 777 /home/jovyan/
+
 RUN docker-credential-gcr configure-docker && chown ${NB_USER}:users $HOME/.docker/config.json
+
 
 # Configure container startup
 EXPOSE 8888
